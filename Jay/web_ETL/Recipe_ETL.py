@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import requests
 import json
 import os
+import sys
 # import time
 
 def takeSecond(elem):
@@ -87,20 +88,21 @@ def icook_ETL(web_url, categories_index, run_pages = 1):
                             pass
 
                     recipes_data['recipes'].append(single_recipe_data)
-                except IndexError as e:
-                    print(e)
-                    # file save
+                except:
+                    print(sys.exc_info())
+                # file save
                 try:
                     with open('%s/%s.json' % (path, recipe_name.replace('/', '|')), 'w', encoding='utf-8') as outfile:
                         outfile.write(json.dumps(single_recipe_data, ensure_ascii=False))
                     with open('%s/recipes.json' % (categories_name_path), 'w', encoding='utf-8') as outfile:
                         outfile.write(json.dumps(recipes_data, ensure_ascii=False))
-                except OSError as e:
-                    print(e)
-                except FileNotFoundError as e:
-                    print(e)
-        except IndexError as e:
-            print(e)
+                except:
+                    print(sys.exc_info())
+                    # print(e)
+                # except FileNotFoundError as e:
+                #     print(e)
+        except:
+            print(sys.exc_info())
 
 def categories():
     temp_list = []
@@ -121,16 +123,21 @@ def categories():
     for j, categories in enumerate(temp_list):
         recipes_categories['categories'].append({categories[0]: categories[1]})
 
-    with open('%s/recipes/recipes_categories.json' % (path), 'w', encoding='utf-8') as outfile:
-        outfile.write(json.dumps(recipes_categories, ensure_ascii=False))
+    try:
+        with open('%s/recipes/recipes_categories.json' % (path), 'w', encoding='utf-8') as outfile:
+            outfile.write(json.dumps(recipes_categories, ensure_ascii=False))
+    except:
+        print(sys.exc_info())
 
 def load_file():
-    with open('%s/recipes/recipes_categories.json' % (path), 'r', encoding='utf-8') as outfile:
-        temp = outfile.readline()
-        read_categories = json.loads(temp, encoding='utf-8')
-        for i, temp in enumerate(read_categories['categories']):
-            recipes_categories.update(temp)
-
+    try:
+        with open('%s/recipes/recipes_categories.json' % (path), 'r', encoding='utf-8') as outfile:
+            temp = outfile.readline()
+            read_categories = json.loads(temp, encoding='utf-8')
+            for i, temp in enumerate(read_categories['categories']):
+                recipes_categories.update(temp)
+    except:
+        print(sys.exc_info())
     return recipes_categories
 
 def main():
