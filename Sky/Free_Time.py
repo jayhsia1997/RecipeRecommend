@@ -84,5 +84,3 @@ for title_first in titles_first:
     except IndexError as e:
         print(e)
 
-
-

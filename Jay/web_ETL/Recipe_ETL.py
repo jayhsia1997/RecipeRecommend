@@ -10,116 +10,161 @@ from bs4 import BeautifulSoup
 import requests
 import json
 import os
+import sys
 # import time
 
-user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36'
+def takeSecond(elem):
+    return elem[1]
 
-headers = {'User-Agent': user_agent}
-login_url = {'cookpad':'https://cookpad.com/tw/%E7%99%BB%E5%85%A5',
-             'icook':'https://icook.tw/login?ref=nav',
-             }
-web_url = {'cookpad': 'https://cookpad.com/tw',
-           'icook': 'https://icook.tw',
-           'icook_popular': 'https://icook.tw/recipes/popular',
-           'icook_rice':'https://icook.tw/categories/46'
-           }
+def icook_ETL(web_url, categories_index, run_pages = 1):
+    # globals
+    recipes_data = {}
+    recipes_data['recipes'] = []
+    single_recipe_data = {}
 
-path = r'./res'
-if not os.path.exists(path):
-    os.mkdir(path)
-
-'''
-#cookpad
-driver = Chrome('./chromedriver')
-driver.get(login_url['cookpad'])
-
-driver.find_element_by_id('identity_authentication_identity').send_keys('jayhsia1997@gmail.com')
-time.sleep(5)
-driver.find_element_by_id('identity_authentication_password').send_keys('7sZSnxCAbatLN8@')
-driver.find_element_by_id('login_submit').click()
-
-#icook
-driver = Chrome('./chromedriver')
-driver.get(login_url['icook'])
-
-driver.find_element_by_xpath('/html/body/div[1]/div/div/div/form[1]/div[3]/div/div/input').send_keys('jayhsia1997@gmail.com')
-time.sleep(5)
-driver.find_element_by_xpath('/html/body/div[1]/div/div/div/form[1]/div[3]/div/input').send_keys('aaaaa')
-'''
-
-#globals
-recipes_data = {}
-recipes_data['recipes'] = []
-single_recipe_data = {}
-
-for page_num in range(1):
-    print('index =', page_num)
-    page_url = web_url['icook_rice'] + "?page=%s" % (page_num)
-    print(page_url)
-    res = requests.get(page_url, headers=headers)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    title = soup.select('div[class="browse-recipe-cover"]')
-    # print(title)
-
-    for recipe_list_index, recipe_list in enumerate(title):
+    for page_num in range(run_pages):
         try:
-            temp = ''
-            recipe_name = recipe_list.a['title']
-            recipe_url = web_url['icook'] + recipe_list.a['href']
-            recipe_img = recipe_list.a.img['data-src']
-            print(recipe_name + ':' + recipe_url)
-
-            res = requests.get(recipe_url, headers=headers)
+            page_url = web_url + '/categories/' + str(categories_index) + "?page=%s" % (page_num)
+            res = requests.get(page_url, headers=headers)
             soup = BeautifulSoup(res.text, 'html.parser')
+            title = soup.select('div[class="browse-recipe-cover"]')
+            categories_name = soup.select('h2[class="category-name"]')[0].text.replace(' ', '').replace('\n', '')
 
-            post_time = soup.select('span[class="meta-content"]')[0].text.split(' ')[0].replace('/', '-')
+            categories_name_path = r'./res/recipes/'+ categories_name
+            if not os.path.exists(categories_name_path):
+                os.mkdir(categories_name_path)
+            print(categories_name)
 
-            if temp != recipe_name:
-                single_recipe_data = {}
-
-            temp = recipe_name
-
-            single_recipe_data = {
-                'recipe_name': recipe_name,
-                'recipe_url': recipe_url,
-                'recipe_img_url': recipe_img,
-                'post_time': post_time,
-                'quantity': '1份',
-                'ingredients': [],
-                'cooking_steps': []
-            }
-
-            for recipe_info_index, recipe_info in enumerate(soup.select('div[class="ingredient"]')):
+            # recipe information
+            for recipe_list_index, recipe_list in enumerate(title):
                 try:
-                    ingredient_name = recipe_info.div.a.text
-                    ingredient_unit = soup.select('div[class="ingredient-unit"]')[recipe_info_index].text
-                    single_recipe_data['ingredients'].append({
-                        'ingredient_name': ingredient_name,
-                        'ingredient_unit': ingredient_unit
-                    })
+                    temp = ''
+                    recipe_name = recipe_list.a['title']
+                    recipe_url = web_url + recipe_list.a['href']
+                    recipe_img = recipe_list.a.img['data-src']
+                    print(recipe_name + ':' + recipe_url)
+
+                    # post time
+                    res = requests.get(recipe_url, headers=headers)
+                    soup = BeautifulSoup(res.text, 'html.parser')
+                    post_time = soup.select('span[class="meta-content"]')[0].text.split(' ')[0].replace('/', '-')
+
+                    if temp != recipe_name:
+                        single_recipe_data = {}
+
+                    temp = recipe_name
+
+                    # json dumps format
+                    single_recipe_data = {
+                        'recipe_name': recipe_name,
+                        'recipe_url': recipe_url,
+                        'recipe_img_url': recipe_img,
+                        'post_time': post_time,
+                        'quantity': '1份',
+                        'ingredients': [],
+                        'cooking_steps': []
+                    }
+
+                    # ingredients
+                    for recipe_info_index, recipe_info in enumerate(soup.select('div[class="ingredient"]')):
+                        try:
+                            ingredient_name = recipe_info.div.a.text
+                            ingredient_unit = soup.select('div[class="ingredient-unit"]')[recipe_info_index].text
+                            single_recipe_data['ingredients'].append({
+                                'ingredient_name': ingredient_name,
+                                'ingredient_unit': ingredient_unit
+                            })
+                        except:
+                            pass
+                    # cooking_methods
+                    for steps_index, steps in enumerate(soup.select('div[class="step-instruction-content"]')):
+                        try:
+                            cooking_methods = steps.text
+                            single_recipe_data["cooking_steps"].append({
+                                "steps": steps_index + 1,
+                                "methods": cooking_methods
+                            })
+                        except:
+                            pass
+
+                    recipes_data['recipes'].append(single_recipe_data)
                 except:
-                    pass
-            for steps_index, steps in enumerate(soup.select('div[class="step-instruction-content"]')):
+                    print(sys.exc_info())
+                # file save
                 try:
-                    cooking_methods = steps.text
-                    single_recipe_data["cooking_steps"].append({
-                        "steps": steps_index + 1,
-                        "methods": cooking_methods
-                    })
+                    with open('%s/%s.json' % (path, recipe_name.replace('/', '|')), 'w', encoding='utf-8') as outfile:
+                        outfile.write(json.dumps(single_recipe_data, ensure_ascii=False))
+                    with open('%s/recipes.json' % (categories_name_path), 'w', encoding='utf-8') as outfile:
+                        outfile.write(json.dumps(recipes_data, ensure_ascii=False))
                 except:
-                    pass
-
-            recipes_data['recipes'].append(single_recipe_data)
-
-            try:
-                with open('%s/%s.json' % (path, recipe_name.replace('/','|')), 'w', encoding='utf-8') as outfile:
-                    outfile.write(json.dumps(single_recipe_data, ensure_ascii=False))
-                with open('%s/recipes_data.json' % (path), 'w', encoding='utf-8') as outfile:
-                    outfile.write(json.dumps(recipes_data, ensure_ascii=False))
-                print('-----')
-            except OSError as e:
-                # with open('%s/recipe%s.txt' % (path, i), 'w', encoding='utf-8') as f:
-                #     f.write(recipe_text + '\n')
-                print(e)
+                    print(sys.exc_info())
+                    # print(e)
+                # except FileNotFoundError as e:
+                #     print(e)
         except:
-            pass
+            print(sys.exc_info())
+
+def categories():
+    temp_list = []
+    res = requests.get(web_url['icook_categories'], headers=headers)
+    soup = BeautifulSoup(res.text, 'html.parser')
+    temp = soup.select('li[class="categories-all-child"]')
+
+    for i, temp_c in enumerate(temp):
+        categories_name = temp_c.a['name']
+        categories_index = int(temp_c.a['href'].split('/')[2])
+        temp_list.append((categories_name, categories_index))
+
+    temp_list.sort(key=takeSecond)
+
+    recipes_categories = {}
+    recipes_categories['categories'] = []
+
+    for j, categories in enumerate(temp_list):
+        recipes_categories['categories'].append({categories[0]: categories[1]})
+
+    try:
+        with open('%s/recipes/recipes_categories.json' % (path), 'w', encoding='utf-8') as outfile:
+            outfile.write(json.dumps(recipes_categories, ensure_ascii=False))
+    except:
+        print(sys.exc_info())
+
+def load_file():
+    try:
+        with open('%s/recipes/recipes_categories.json' % (path), 'r', encoding='utf-8') as outfile:
+            temp = outfile.readline()
+            read_categories = json.loads(temp, encoding='utf-8')
+            for i, temp in enumerate(read_categories['categories']):
+                recipes_categories.update(temp)
+    except:
+        print(sys.exc_info())
+    return recipes_categories
+
+def main():
+    print('-----')
+
+    categories()
+    load_file()
+    print(recipes_categories['米食'])
+
+    icook_ETL(web_url['icook'], recipes_categories['米食'])
+
+if __name__ == '__main__':
+    path = r'./res'
+    path2 = r'./res/recipes'
+    if not os.path.exists(path):
+        os.mkdir(path)
+    if not os.path.exists(path2):
+        os.mkdir(path2)
+
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36'
+    headers = {'User-Agent': user_agent}
+    web_url = {'cookpad': 'https://cookpad.com/tw',
+               'icook': 'https://icook.tw',
+               'icook_popular': 'https://icook.tw/recipes/popular',
+               'icook_categories': 'https://icook.tw/categories',
+               'icook_rice': 'https://icook.tw/categories/46'
+               }
+    recipes_categories = {}
+
+    main()
