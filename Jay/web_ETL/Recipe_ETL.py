@@ -60,7 +60,7 @@ def icook_ETL(web_url, categories_index, run_pages = 1):
                         'recipe_url': recipe_url,
                         'recipe_img_url': recipe_img,
                         'post_time': post_time,
-                        'quantity': '1份',
+                        'quantity': 1,
                         'ingredients': [],
                         'cooking_steps': []
                     }
