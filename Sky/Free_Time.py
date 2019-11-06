@@ -83,4 +83,3 @@ for title_first in titles_first:
         print(e)
 
 
-
