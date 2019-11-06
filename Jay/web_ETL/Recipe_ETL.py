@@ -98,9 +98,6 @@ def icook_ETL(web_url, categories_index, run_pages = 1):
                         outfile.write(json.dumps(recipes_data, ensure_ascii=False))
                 except:
                     print(sys.exc_info())
-                    # print(e)
-                # except FileNotFoundError as e:
-                #     print(e)
         except:
             print(sys.exc_info())
 
