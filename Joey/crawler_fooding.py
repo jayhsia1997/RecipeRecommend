@@ -11,10 +11,10 @@ if os.path.exists(folder_path)  == False:
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://www.fooding.com.tw/recipe-shares.php?cookid="
-recipe_num = 1
-### till 116124
+recipe_num = 114451
+### till 116172
 
-for i in range(1000):
+for i in range(1):
 
     try:
         recipe_url = start_page + str(recipe_num)
@@ -121,12 +121,18 @@ for i in range(1000):
 
 
         ### 儲存json
-        json_path = folder_path + "/" + str(recipe_num) + "_" + dish_name + ".json"
-        if os.path.exists(json_path) == False:
-            with open(file = json_path, mode = "w", encoding='utf-8') as doc:
-                doc.write(json.dumps(single_recipe, ensure_ascii= False))
+        if single_recipe['cooking_steps'] !=[] and single_recipe['ingredients'] !=[] \
+                and dish_name !="" and img_url !="" and upload_date !="" :
+            json_path = folder_path + "/" + str(recipe_num) + "_" + dish_name + ".json"
+            if os.path.exists(json_path) == False:
+                with open(file = json_path, mode = "w", encoding='utf-8') as doc:
+                    doc.write(json.dumps(single_recipe, ensure_ascii= False))
+            else:
+                print("Recipe " + str(recipe_num) + " had already downloaded")
         else:
-            print("Recipe " + str(recipe_num) + " had already downloaded")
+            print(recipe_url, "has null, passed")
+            pass
+
 
         # ### 文字儲存
         # text_path = folder_path + "/" + str(recipe_num) + "_" + dish_name + ".txt"
@@ -156,12 +162,12 @@ for i in range(1000):
         print("")
 
         ### 紀錄錯誤log
-        # log_name = "log_" + now_date
-        # log_path = folder_path + "/" + log_name + ".txt"
-        #
-        # with open(file=log_path, mode="a", encoding='utf-8') as log:
-        #     error_str = recipe_url + "\n" + str(errMsg) + "\n" + "*********************************************" + "\n" + "\n"
-        #     log.write(error_str)
+        log_name = "log_" + now_date
+        log_path = folder_path + "/" + log_name + ".txt"
+
+        with open(file=log_path, mode="a", encoding='utf-8') as log:
+            error_str = recipe_url + "\n" + str(errMsg) + "\n" + "*********************************************" + "\n" + "\n"
+            log.write(error_str)
 
 
     ### 接續下一頁

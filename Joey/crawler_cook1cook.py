@@ -11,10 +11,10 @@ if os.path.exists(folder_path)  == False:
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://cook1cook.com/recipe/"
-recipe_num = 1
-### till 47787
+recipe_num = 19324
+### till 47849
 
-for i in range(1000):
+for i in range(1):
 
     try:
         recipe_url = start_page + str(recipe_num)
@@ -109,6 +109,7 @@ for i in range(1000):
         for index, directions_info in enumerate(directions_list):
             step_num = index + 1
             directions = recipe_searched_soup.select('li[class="step"] div[class="media-body"]')[index].text.strip()
+
             directions = re.sub(" ", "", directions)
             directions = re.sub("\t", "", directions)
             directions = re.sub("\n", "", directions)
@@ -136,12 +137,17 @@ for i in range(1000):
 
 
         ### 儲存json
-        json_path = folder_path + "/" + str(recipe_num) + "_" + dish_name + ".json"
-        if os.path.exists(json_path) == False:
-            with open(file = json_path, mode = "w", encoding='utf-8') as doc:
-                doc.write(json.dumps(single_recipe, ensure_ascii= False))
+        if single_recipe['cooking_steps'] !=[] and single_recipe['ingredients'] !=[] \
+                and dish_name !="" and img_url !="" and upload_date !="" :
+            json_path = folder_path + "/" + str(recipe_num) + "_" + dish_name + ".json"
+            if os.path.exists(json_path) == False:
+                with open(file = json_path, mode = "w", encoding='utf-8') as doc:
+                    doc.write(json.dumps(single_recipe, ensure_ascii= False))
+            else:
+                print("Recipe " + str(recipe_num) + " had already downloaded")
         else:
-            print("Recipe " + str(recipe_num) + " had already downloaded")
+            print(recipe_url, "has null, passed.")
+            pass
 
 
         # ### 文字儲存
