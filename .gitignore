@@ -1,5 +1,11 @@
+# Jay
 /Jay/web_ETL/res
 /Jay/web_ETL/chromedriver
 /venv/
 .idea/
 .vscode/
+
+# Howard
+/Howard/chromedriver.exe
+/Howard/chromedriver_win32 (2).zip
+
