@@ -3,16 +3,18 @@ import requests, bs4, re, os, jieba, datetime, time, random, sys, traceback, jso
 
 ### 建立資料夾
 now_date = str(datetime.date.today())
-folder_path = r"./downloads/COOK1COOK_" + now_date
+data_path = r"./downloads"
+folder_path = r"./downloads/cook1cook_" + now_date
 if os.path.exists(folder_path)  == False:
-    os.mkdir(folder_path)
+    os.makedirs(folder_path)
 
 
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://cook1cook.com/recipe/"
-recipe_num = 19324
-### till 47849
+recipe_num = 47840
+### start 1000
+### till 3000
 
 for i in range(1):
 
@@ -27,7 +29,9 @@ for i in range(1):
 
         ### 料理名
         dish_name = recipe_searched_soup.select('h1[itemprop="name"]')[0].text.strip()
-        dish_name = re.sub(r"【.*】", "", dish_name)
+        dish_name = re.sub(r"\W.*\W", "", dish_name)
+        dish_name = re.sub(r"\W", "", dish_name)
+
         print(dish_name)
 
 
@@ -178,8 +182,8 @@ for i in range(1):
         print("")
 
         ### 紀錄錯誤log
-        log_name = "log_" + now_date
-        log_path = folder_path + "/" + log_name + ".txt"
+        log_name = "log_" + "cook1cook_" + now_date
+        log_path = data_path + "/" + log_name + ".txt"
 
         with open(file=log_path, mode="a", encoding='utf-8') as log:
             error_str = recipe_url + "\n" + str(errMsg) + "\n" + "*********************************************" + "\n" + "\n"
