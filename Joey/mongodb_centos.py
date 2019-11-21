@@ -1,4 +1,4 @@
-import os, json, pymongo, datetime, time
+import os, json, pymongo, datetime, time, sys
 
 
 ### 更換要載入資料庫的目標時，需修改項目 dirpath, client, file_path, collection

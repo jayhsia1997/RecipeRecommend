@@ -12,7 +12,7 @@ if os.path.exists(folder_path)  == False:
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://cook1cook.com/recipe/"
-recipe_num = 47840
+recipe_num = 47881
 ### start 1000
 ### till 3000
 
@@ -84,10 +84,13 @@ for i in range(1):
         for index, ingredients_info in enumerate(ingredients_list):
             ingredients = recipe_searched_soup.select('span[class="pull-left ingredient-name"]')[index].text.strip()
             quantities = recipe_searched_soup.select('span[class="pull-right ingredient-unit"]')[index].text.strip()
-            single_recipe['ingredients'].append({
-                'ingredient_name': ingredients,
-                'ingredient_unit': quantities
-            })
+            if ingredients !="" and quantities !="":
+                single_recipe['ingredients'].append({
+                    'ingredient_name': ingredients,
+                    'ingredient_unit': quantities
+                })
+            else:
+                pass
 
 
         # ### 食材
@@ -120,10 +123,13 @@ for i in range(1):
             directions = re.sub("\r", "", directions)
             directions = re.sub("\r\n", "", directions)
             directions = directions[1:]
-            single_recipe['cooking_steps'].append({
-                "steps": step_num,
-                "methods": directions
-            })
+            if directions != "":
+                single_recipe['cooking_steps'].append({
+                    "steps": step_num,
+                    "methods": directions
+                })
+            else:
+                pass
 
 
         # directions = recipe_searched_soup.select('li[class="step"] div[class="media-body"]')

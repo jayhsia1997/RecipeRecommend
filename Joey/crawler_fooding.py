@@ -14,7 +14,7 @@ my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebK
 start_page = "https://www.fooding.com.tw/recipe-shares.php?cookid="
 recipe_num = 100127
 ### start 1
-### till 116172
+### till 116272
 
 for i in range(1):
 
@@ -74,10 +74,13 @@ for i in range(1):
         for index, ingredients_info in enumerate(ingredients_list):
             ingredients = recipe_searched_soup.select('div[class="row mg-btm10-border"] div[class="col-sm-8"]')[index].text.strip()
             quantities = recipe_searched_soup.select('div[class="row mg-btm10-border"] div[class="col-sm-4 text-right"]')[index].text.strip()
-            single_recipe['ingredients'].append({
-                'ingredient_name': ingredients,
-                'ingredient_unit': quantities
-            })
+            if ingredients !="" and quantities !="":
+                single_recipe['ingredients'].append({
+                    'ingredient_name': ingredients,
+                    'ingredient_unit': quantities
+                })
+            else:
+                pass
 
 
         # ### 食材
@@ -107,10 +110,13 @@ for i in range(1):
             directions = re.sub("\n", "", directions)
             directions = re.sub("\r", "", directions)
             directions = re.sub("\r\n", "", directions)
-            single_recipe['cooking_steps'].append({
-                "steps": step_num,
-                "methods": directions
-            })
+            if directions != "":
+                single_recipe['cooking_steps'].append({
+                    "steps": step_num,
+                    "methods": directions
+                })
+            else:
+                pass
 
 
         # directions = recipe_searched_soup.select('div[class="row mg-btm10"] p')

@@ -83,10 +83,13 @@ for i in range(1):
         for index, ingredients_info in enumerate(ingredients_list):
             ingredients = recipe_searched_soup.select('span[class="pull-left ingredient-name"]')[index].text.strip()
             quantities = recipe_searched_soup.select('span[class="pull-right ingredient-unit"]')[index].text.strip()
-            single_recipe['ingredients'].append({
-                'ingredient_name': ingredients,
-                'ingredient_unit': quantities
-            })
+            if ingredients !="" and quantities !="":
+                single_recipe['ingredients'].append({
+                    'ingredient_name': ingredients,
+                    'ingredient_unit': quantities
+                })
+            else:
+                pass
 
 
         # ### 食材
@@ -119,10 +122,13 @@ for i in range(1):
             directions = re.sub("\r", "", directions)
             directions = re.sub("\r\n", "", directions)
             directions = directions[1:]
-            single_recipe['cooking_steps'].append({
-                "steps": step_num,
-                "methods": directions
-            })
+            if directions != "":
+                single_recipe['cooking_steps'].append({
+                    "steps": step_num,
+                    "methods": directions
+                })
+            else:
+                pass
 
 
         # directions = recipe_searched_soup.select('li[class="step"] div[class="media-body"]')
