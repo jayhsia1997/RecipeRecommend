@@ -3,7 +3,7 @@
 # for macOS
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 # from selenium.webdriver import Chrome
 
@@ -11,12 +11,13 @@ import requests
 import json
 import os
 import sys
+import pymongo
 # import time
 
 def takeSecond(elem):
     return elem[1]
 
-def icook_ETL(web_url, categories_index, run_pages = 1):
+def icook_ETL(web_url, categories_index, run_pages=1):
     # globals
     recipes_data = {}
     recipes_data['recipes'] = []
@@ -30,7 +31,7 @@ def icook_ETL(web_url, categories_index, run_pages = 1):
             title = soup.select('div[class="browse-recipe-cover"]')
             categories_name = soup.select('h2[class="category-name"]')[0].text.replace(' ', '').replace('\n', '')
 
-            categories_name_path = r'./res/recipes/'+ categories_name
+            categories_name_path = r'./res/recipes/' + categories_name
             if not os.path.exists(categories_name_path):
                 os.mkdir(categories_name_path)
             print(categories_name)
@@ -90,12 +91,9 @@ def icook_ETL(web_url, categories_index, run_pages = 1):
                     recipes_data['recipes'].append(single_recipe_data)
                 except:
                     print(sys.exc_info())
-                # file save
+                # save file to mongo
                 try:
-                    with open('%s/%s.json' % (path, recipe_name.replace('/', '|')), 'w', encoding='utf-8') as outfile:
-                        outfile.write(json.dumps(single_recipe_data, ensure_ascii=False))
-                    with open('%s/recipes.json' % (categories_name_path), 'w', encoding='utf-8') as outfile:
-                        outfile.write(json.dumps(recipes_data, ensure_ascii=False))
+                    db.recipes_db.insert_one(single_recipe_data)
                 except:
                     print(sys.exc_info())
         except:
@@ -114,25 +112,29 @@ def categories():
 
     temp_list.sort(key=takeSecond)
 
-    recipes_categories = {}
+    recipes_categories = {'_id':1}
     recipes_categories['categories'] = []
 
     for j, categories in enumerate(temp_list):
         recipes_categories['categories'].append({categories[0]: categories[1]})
 
     try:
-        with open('%s/recipes/recipes_categories.json' % (path), 'w', encoding='utf-8') as outfile:
-            outfile.write(json.dumps(recipes_categories, ensure_ascii=False))
+        if db.recipes_categories.find_one({'_id':1}) != None:
+            print("id exist")
+        elif db.recipes_categories.find_one() == None:
+            db.recipes_categories.insert_one(recipes_categories)
+            print('insert done')
+        else:
+            print("id exist")
     except:
         print(sys.exc_info())
 
 def load_file():
     try:
-        with open('%s/recipes/recipes_categories.json' % (path), 'r', encoding='utf-8') as outfile:
-            temp = outfile.readline()
-            read_categories = json.loads(temp, encoding='utf-8')
-            for i, temp in enumerate(read_categories['categories']):
-                recipes_categories.update(temp)
+        read_categories = db.recipes_categories.find_one()
+        print(read_categories)
+        for i, temp in enumerate(read_categories['categories']):
+            recipes_categories.update(temp)
     except:
         print(sys.exc_info())
     return recipes_categories
@@ -142,6 +144,7 @@ def main():
 
     categories()
     load_file()
+
     print(recipes_categories['米食'])
 
     icook_ETL(web_url['icook'], recipes_categories['米食'])
@@ -154,6 +157,7 @@ if __name__ == '__main__':
     if not os.path.exists(path2):
         os.mkdir(path2)
 
+    # user agent
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36'
     headers = {'User-Agent': user_agent}
     web_url = {'cookpad': 'https://cookpad.com/tw',
@@ -162,6 +166,11 @@ if __name__ == '__main__':
                'icook_categories': 'https://icook.tw/categories',
                'icook_rice': 'https://icook.tw/categories/46'
                }
+
+    # mongo connect set
+    client = pymongo.MongoClient('mongodb://%s:%s@10.120.38.13' % ("root", "root"), 27017)
+    db = client.test
+
     recipes_categories = {}
 
     main()
