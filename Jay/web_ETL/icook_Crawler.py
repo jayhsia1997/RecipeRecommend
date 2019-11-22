@@ -1,40 +1,46 @@
 # -*- coding: utf-8 -*-
 
+import threading
+import time
+import pymongo
+import sys
+import os
+import json
+import requests
+from bs4 import BeautifulSoup
 # for macOS
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 # --------------------------------------------------------------------------------------------------
-from bs4 import BeautifulSoup
-# from selenium.webdriver import Chrome
 
-import requests
-import json
-import os
-import sys
-import pymongo
-# import time
+
+def worker(worker_id, web_url, categories_index, collection_name, run_pages=1):
+    print("Worker: ", worker_id)
+    icook_ETL(web_url=web_url, categories_index=categories_index,
+              collection_name=collection_name, run_pages=run_pages)
+
 
 def takeSecond(elem):
     return elem[1]
 
-def icook_ETL(web_url, categories_index, run_pages=1):
+
+def icook_ETL(web_url, categories_index, collection_name, run_pages):
     # globals
     recipes_data = {}
     recipes_data['recipes'] = []
     single_recipe_data = {}
 
+    # Database collection
+    db_collection = db[collection_name]
+    print(db_collection)
+
     for page_num in range(run_pages):
         try:
-            page_url = web_url + '/categories/' + str(categories_index) + "?page=%s" % (page_num)
+            page_url = web_url + '/categories/' + \
+                str(categories_index) + "?page=%s" % (page_num)
             res = requests.get(page_url, headers=headers)
             soup = BeautifulSoup(res.text, 'html.parser')
             title = soup.select('div[class="browse-recipe-cover"]')
-            categories_name = soup.select('h2[class="category-name"]')[0].text.replace(' ', '').replace('\n', '')
-
-            categories_name_path = r'./res/recipes/' + categories_name
-            if not os.path.exists(categories_name_path):
-                os.mkdir(categories_name_path)
-            print(categories_name)
 
             # recipe information
             for recipe_list_index, recipe_list in enumerate(title):
@@ -48,7 +54,8 @@ def icook_ETL(web_url, categories_index, run_pages=1):
                     # post time
                     res = requests.get(recipe_url, headers=headers)
                     soup = BeautifulSoup(res.text, 'html.parser')
-                    post_time = soup.select('span[class="meta-content"]')[0].text.split(' ')[0].replace('/', '-')
+                    post_time = soup.select(
+                        'span[class="meta-content"]')[0].text.split(' ')[0].replace('/', '-')
 
                     if temp != recipe_name:
                         single_recipe_data = {}
@@ -70,7 +77,8 @@ def icook_ETL(web_url, categories_index, run_pages=1):
                     for recipe_info_index, recipe_info in enumerate(soup.select('div[class="ingredient"]')):
                         try:
                             ingredient_name = recipe_info.div.a.text
-                            ingredient_unit = soup.select('div[class="ingredient-unit"]')[recipe_info_index].text
+                            ingredient_unit = soup.select(
+                                'div[class="ingredient-unit"]')[recipe_info_index].text
                             single_recipe_data['ingredients'].append({
                                 'ingredient_name': ingredient_name,
                                 'ingredient_unit': ingredient_unit
@@ -93,11 +101,12 @@ def icook_ETL(web_url, categories_index, run_pages=1):
                     print(sys.exc_info())
                 # save file to mongo
                 try:
-                    db.recipes_db.insert_one(single_recipe_data)
+                    db_collection.insert_one(single_recipe_data)
                 except:
                     print(sys.exc_info())
         except:
             print(sys.exc_info())
+
 
 def categories():
     temp_list = []
@@ -112,14 +121,14 @@ def categories():
 
     temp_list.sort(key=takeSecond)
 
-    recipes_categories = {'_id':1}
+    recipes_categories = {'_id': 1}
     recipes_categories['categories'] = []
 
     for j, categories in enumerate(temp_list):
         recipes_categories['categories'].append({categories[0]: categories[1]})
 
     try:
-        if db.recipes_categories.find_one({'_id':1}) != None:
+        if db.recipes_categories.find_one({'_id': 1}) != None:
             print("id exist")
         elif db.recipes_categories.find_one() == None:
             db.recipes_categories.insert_one(recipes_categories)
@@ -129,29 +138,44 @@ def categories():
     except:
         print(sys.exc_info())
 
+
 def load_file():
     try:
         read_categories = db.recipes_categories.find_one()
-        print(read_categories)
+        # print(read_categories)
         for i, temp in enumerate(read_categories['categories']):
             recipes_categories.update(temp)
     except:
         print(sys.exc_info())
     return recipes_categories
 
+
 def main():
     print('-----')
 
-    categories()
+    # save categories to mongo
+    # categories()
+
+    # load categories from mongo, return "recipes_categories"
     load_file()
 
-    print(recipes_categories['米食'])
+    try:
+        # creat threads
+        worker1 = threading.Thread(target=worker, args=(
+            1, web_url['icook'], recipes_categories['米食'], "rice"))
+        worker2 = threading.Thread(target=worker, args=(
+            2, web_url['icook'], recipes_categories['麵食'], "noodle"))
 
-    icook_ETL(web_url['icook'], recipes_categories['米食'])
+        # start threads
+        worker1.start()
+        worker2.start()
+    except:
+        print("Error: unable to start thread")
+
 
 if __name__ == '__main__':
-    path = r'./res'
-    path2 = r'./res/recipes'
+    path = r'/Users/jay/git/PythonProjects/RecipeRecommend/Jay/web_ETL/res'
+    path2 = r'/Users/jay/git/PythonProjects/RecipeRecommend/Jay/web_ETL/res/recipes'
     if not os.path.exists(path):
         os.mkdir(path)
     if not os.path.exists(path2):
@@ -168,7 +192,8 @@ if __name__ == '__main__':
                }
 
     # mongo connect set
-    client = pymongo.MongoClient('mongodb://%s:%s@10.120.38.13' % ("root", "root"), 27017)
+    client = pymongo.MongoClient(
+        'mongodb://%s:%s@10.120.38.13' % ("root", "root"), 27017)
     db = client.test
 
     recipes_categories = {}
