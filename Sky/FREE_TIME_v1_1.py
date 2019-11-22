@@ -1,11 +1,10 @@
 from bs4 import BeautifulSoup
 import multiprocessing as mp
-#from modul_hank import *
 import os,time,random,requests
 
-x=4
-y=5
-human=6
+x=40 #從第幾類
+y=54 #抓到第幾類 (包含)
+human=4 #(幾個進程)
 
 user_agenttt="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
 headers={"user-agent":user_agenttt,
@@ -77,23 +76,24 @@ def worker(worker_id,queue):
             str_of_class=",".join(list_of_class)
             f.write(str_of_class)
         time.sleep(30)
+        queue.task_done()
 
 
 
 def main(human):
-    #lazy(5)
     t0 = time.time()
     print("start")
     queue=mp.JoinableQueue()
-    for i in range(human+1):
-        worker_i=mp.Process(target=worker,args=(i+1,queue))
+    for i in range(human):
+        worker_i=mp.Process(target=worker,args=(i,queue))
         worker_i.daemon=True
         worker_i.start()
         print(worker_i)
     producer(queue)
     queue.join()
     print(time.time()-t0, "seconds time")
+
 if __name__ == "__main__":
-    main(5) #worker數目
+    main(human) #worker數目
 
 
