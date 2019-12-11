@@ -7,6 +7,7 @@ import sys
 import os
 import json
 import requests
+import re
 from bs4 import BeautifulSoup
 # for macOS
 import ssl
@@ -14,17 +15,17 @@ ssl._create_default_https_context = ssl._create_unverified_context
 # --------------------------------------------------------------------------------------------------
 
 
-def worker(worker_id, web_url, categories_index, collection_name, run_pages=1, mongo_id=0):
+def worker(worker_id, web_url, categories_index, collection_name, mongo_id=0):
     print("Worker: ", worker_id)
     icook_ETL(web_url=web_url, categories_index=categories_index,
-              collection_name=collection_name, run_pages=run_pages)
+              collection_name=collection_name, mongo_id=mongo_id)
 
 
 def takeSecond(elem):
     return elem[1]
 
 
-def icook_ETL(web_url, categories_index, collection_name, run_pages, mongo_id):
+def icook_ETL(web_url, categories_index, collection_name, mongo_id):
     # globals
     recipes_data = {}
     recipes_data['recipes'] = []
@@ -33,7 +34,15 @@ def icook_ETL(web_url, categories_index, collection_name, run_pages, mongo_id):
     # Database collection
     db_collection = db[collection_name]
     # print(db_collection)
-
+    
+    # Get the total number of pages in the recipe category
+    total_count_url = web_url + '/categories/' + str(categories_index)
+    total_count_res = requests.get(total_count_url, headers=headers)
+    total_count_soup = BeautifulSoup(total_count_res.text, 'html.parser')
+    total_count_head = total_count_soup.select('head')
+    total_count = re.sub(r'[^0-9]', '',total_count_head[0].title.text)
+    run_pages = int(total_count)//18
+    
     for page_num in range(run_pages):
         try:
             page_url = web_url + '/categories/' + \
@@ -103,7 +112,8 @@ def icook_ETL(web_url, categories_index, collection_name, run_pages, mongo_id):
                     print(sys.exc_info())
                 # save file to mongo
                 try:
-                    db_collection.insert_one(single_recipe_data)
+                    # db_collection.insert_one(single_recipe_data)
+                    print(mongo_id)
                 except:
                     print(sys.exc_info())
         except:
@@ -164,25 +174,25 @@ def main():
     try:
         # creat threads
         worker1 = threading.Thread(target=worker, args=(
-            1, web_url['icook'], recipes_categories['米食'], "rice", 10, 0))
+            1, web_url['icook'], recipes_categories['米食'], "rice", 0))
         worker2 = threading.Thread(target=worker, args=(
-            2, web_url['icook'], recipes_categories['麵食'], "noodle", 10, 0))
+            2, web_url['icook'], recipes_categories['麵食'], "noodle", 0))
         worker3 = threading.Thread(target=worker, args=(
-            3, web_url['icook'], recipes_categories['湯'], "soup", 10, 0))
+            3, web_url['icook'], recipes_categories['湯'], "soup", 0))
         worker4 = threading.Thread(target=worker, args=(
-            4, web_url['icook'], recipes_categories['雞肉'], "chicken", 10, 0))
+            4, web_url['icook'], recipes_categories['雞肉'], "chicken", 0))
         worker5 = threading.Thread(target=worker, args=(
-            5, web_url['icook'], recipes_categories['牛肉'], "beef", 10, 0))
+            5, web_url['icook'], recipes_categories['牛肉'], "beef", 0))
         worker6 = threading.Thread(target=worker, args=(
-            6, web_url['icook'], recipes_categories['豬肉'], "pork", 10, 0))
+            6, web_url['icook'], recipes_categories['豬肉'], "pork", 0))
         worker7 = threading.Thread(target=worker, args=(
-            7, web_url['icook'], recipes_categories['羊肉'], "lamp", 10, 0))
+            7, web_url['icook'], recipes_categories['羊肉'], "lamp", 0))
         worker8 = threading.Thread(target=worker, args=(
-            8, web_url['icook'], recipes_categories['鴨肉'], "duck", 10, 0))
+            8, web_url['icook'], recipes_categories['鴨肉'], "duck", 0))
         worker9 = threading.Thread(target=worker, args=(
-            9, web_url['icook'], recipes_categories['素食'], "vegetarian", 10, 0))
+            9, web_url['icook'], recipes_categories['素食'], "vegetarian", 0))
         worker10 = threading.Thread(target=worker, args=(
-            10, web_url['icook'], recipes_categories['台灣小吃'], "taiwan_snacks", 10, 0))
+            10, web_url['icook'], recipes_categories['台灣小吃'], "taiwan_snacks", 0))
 
         # start threads
         worker1.start()
@@ -200,13 +210,6 @@ def main():
 
 
 if __name__ == '__main__':
-    path = r'/Users/jay/git/PythonProjects/RecipeRecommend/Jay/web_ETL/res'
-    path2 = r'/Users/jay/git/PythonProjects/RecipeRecommend/Jay/web_ETL/res/recipes'
-    if not os.path.exists(path):
-        os.mkdir(path)
-    if not os.path.exists(path2):
-        os.mkdir(path2)
-
     # user agent
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36'
     headers = {'User-Agent': user_agent}
@@ -219,7 +222,7 @@ if __name__ == '__main__':
 
     # mongo connect set
     client = pymongo.MongoClient(
-        'mongodb://%s:%s@114.44.74.127' % ("root", "root"), 27017)
+        'mongodb://%s:%s@%s:%s/' % ('root', 'root', '114.44.74.127', '27017'))
     db = client.test
 
     recipes_categories = {}
