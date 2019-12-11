@@ -29,10 +29,11 @@ def icook_ETL(web_url, categories_index, collection_name, run_pages):
     recipes_data = {}
     recipes_data['recipes'] = []
     single_recipe_data = {}
+    mongo_id = 0
 
     # Database collection
     db_collection = db[collection_name]
-    print(db_collection)
+    # print(db_collection)
 
     for page_num in range(run_pages):
         try:
@@ -49,7 +50,7 @@ def icook_ETL(web_url, categories_index, collection_name, run_pages):
                     recipe_name = recipe_list.a['title']
                     recipe_url = web_url + recipe_list.a['href']
                     recipe_img = recipe_list.a.img['data-src']
-                    print(recipe_name + ':' + recipe_url)
+                    # print(recipe_name + ':' + recipe_url)
 
                     # post time
                     res = requests.get(recipe_url, headers=headers)
@@ -59,11 +60,13 @@ def icook_ETL(web_url, categories_index, collection_name, run_pages):
 
                     if temp != recipe_name:
                         single_recipe_data = {}
+                        mongo_id += 1
 
                     temp = recipe_name
 
                     # json dumps format
                     single_recipe_data = {
+                        '_id': mongo_id,
                         'recipe_name': recipe_name,
                         'recipe_url': recipe_url,
                         'recipe_img_url': recipe_img,
@@ -154,7 +157,7 @@ def main():
     print('-----')
 
     # save categories to mongo
-    # categories()
+    categories()
 
     # load categories from mongo, return "recipes_categories"
     load_file()
@@ -162,13 +165,37 @@ def main():
     try:
         # creat threads
         worker1 = threading.Thread(target=worker, args=(
-            1, web_url['icook'], recipes_categories['米食'], "rice"))
+            1, web_url['icook'], recipes_categories['米食'], "rice", 10))
         worker2 = threading.Thread(target=worker, args=(
-            2, web_url['icook'], recipes_categories['麵食'], "noodle"))
+            2, web_url['icook'], recipes_categories['麵食'], "noodle", 10))
+        worker3 = threading.Thread(target=worker, args=(
+            3, web_url['icook'], recipes_categories['湯'], "soup", 10))
+        worker4 = threading.Thread(target=worker, args=(
+            4, web_url['icook'], recipes_categories['雞肉'], "chicken", 10))
+        worker5 = threading.Thread(target=worker, args=(
+            5, web_url['icook'], recipes_categories['牛肉'], "beef", 10))
+        worker6 = threading.Thread(target=worker, args=(
+            6, web_url['icook'], recipes_categories['豬肉'], "pork", 10))
+        worker7 = threading.Thread(target=worker, args=(
+            7, web_url['icook'], recipes_categories['羊肉'], "lamp", 10))
+        worker8 = threading.Thread(target=worker, args=(
+            8, web_url['icook'], recipes_categories['鴨肉'], "duck", 10))
+        worker9 = threading.Thread(target=worker, args=(
+            9, web_url['icook'], recipes_categories['素食'], "vegetarian", 10))
+        worker10 = threading.Thread(target=worker, args=(
+            10, web_url['icook'], recipes_categories['台灣小吃'], "taiwan_snacks", 10))
 
         # start threads
         worker1.start()
         worker2.start()
+        worker3.start()
+        worker4.start()
+        worker5.start()
+        worker6.start()
+        worker7.start()
+        worker8.start()
+        worker9.start()
+        worker10.start()
     except:
         print("Error: unable to start thread")
 
@@ -193,7 +220,7 @@ if __name__ == '__main__':
 
     # mongo connect set
     client = pymongo.MongoClient(
-        'mongodb://%s:%s@10.120.38.13' % ("root", "root"), 27017)
+        'mongodb://%s:%s@114.44.74.127' % ("root", "root"), 27017)
     db = client.test
 
     recipes_categories = {}
