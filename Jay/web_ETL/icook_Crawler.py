@@ -15,7 +15,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 # --------------------------------------------------------------------------------------------------
 
 
-def worker(worker_id, web_url, categories_index, collection_name, mongo_id=0):
+def worker(worker_id, web_url, categories_index, collection_name, mongo_id=1):
     print("Worker: ", worker_id)
     icook_ETL(web_url=web_url, categories_index=categories_index,
               collection_name=collection_name, mongo_id=mongo_id)
@@ -74,8 +74,7 @@ def icook_ETL(web_url, categories_index, collection_name, mongo_id):
                         quantity = int(quantity_temp[0].span.text)
 
                     if temp != recipe_name:
-                        single_recipe_data = {}
-                        mongo_id += 1
+                        single_recipe_data = {}                        
 
                     temp = recipe_name
 
@@ -120,6 +119,7 @@ def icook_ETL(web_url, categories_index, collection_name, mongo_id):
                 # save file to mongo
                 try:
                     # db_collection.insert_one(single_recipe_data)
+                    mongo_id += 1
                     print(mongo_id)
                 except:
                     print(sys.exc_info())
@@ -181,25 +181,25 @@ def main():
     try:
         # creat threads
         worker1 = threading.Thread(target=worker, args=(
-            1, web_url['icook'], recipes_categories['米食'], "rice", 0))
+            1, web_url['icook'], recipes_categories['米食'], "rice", 1))
         worker2 = threading.Thread(target=worker, args=(
-            2, web_url['icook'], recipes_categories['麵食'], "noodle", 0))
+            2, web_url['icook'], recipes_categories['麵食'], "noodle", 1))
         worker3 = threading.Thread(target=worker, args=(
-            3, web_url['icook'], recipes_categories['湯'], "soup", 0))
+            3, web_url['icook'], recipes_categories['湯'], "soup", 1))
         worker4 = threading.Thread(target=worker, args=(
-            4, web_url['icook'], recipes_categories['雞肉'], "chicken", 0))
+            4, web_url['icook'], recipes_categories['雞肉'], "chicken", 1))
         worker5 = threading.Thread(target=worker, args=(
-            5, web_url['icook'], recipes_categories['牛肉'], "beef", 0))
+            5, web_url['icook'], recipes_categories['牛肉'], "beef", 1))
         worker6 = threading.Thread(target=worker, args=(
-            6, web_url['icook'], recipes_categories['豬肉'], "pork", 0))
+            6, web_url['icook'], recipes_categories['豬肉'], "pork", 1))
         worker7 = threading.Thread(target=worker, args=(
-            7, web_url['icook'], recipes_categories['羊肉'], "lamp", 0))
+            7, web_url['icook'], recipes_categories['羊肉'], "lamp", 1))
         worker8 = threading.Thread(target=worker, args=(
-            8, web_url['icook'], recipes_categories['鴨肉'], "duck", 0))
+            8, web_url['icook'], recipes_categories['鴨肉'], "duck", 1))
         worker9 = threading.Thread(target=worker, args=(
-            9, web_url['icook'], recipes_categories['素食'], "vegetarian", 0))
+            9, web_url['icook'], recipes_categories['素食'], "vegetarian", 1))
         worker10 = threading.Thread(target=worker, args=(
-            10, web_url['icook'], recipes_categories['台灣小吃'], "taiwan_snacks", 0))
+            10, web_url['icook'], recipes_categories['台灣小吃'], "taiwan_snacks", 1))
         
         '''
         Done
