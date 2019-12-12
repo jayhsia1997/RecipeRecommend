@@ -43,7 +43,7 @@ def icook_ETL(web_url, categories_index, collection_name, mongo_id):
     total_count = re.sub(r'[^0-9]', '',total_count_head[0].title.text)
     run_pages = int(total_count)//18
     
-    for page_num in range(run_pages):
+    for page_num in range(1):
         try:
             page_url = web_url + '/categories/' + \
                 str(categories_index) + "?page=%s" % (page_num)
@@ -55,16 +55,23 @@ def icook_ETL(web_url, categories_index, collection_name, mongo_id):
             for recipe_list_index, recipe_list in enumerate(title):
                 try:
                     temp = ''
+                    quantity = 1
                     recipe_name = recipe_list.a['title']
                     recipe_url = web_url + recipe_list.a['href']
                     recipe_img = recipe_list.a.img['data-src']
-                    # print(recipe_name + ':' + recipe_url)
+                    print(recipe_name + ':' + recipe_url)
 
                     # post time
                     res = requests.get(recipe_url, headers=headers)
                     soup = BeautifulSoup(res.text, 'html.parser')
                     post_time = soup.select(
                         'span[class="meta-content"]')[0].text.split(' ')[0].replace('/', '-')
+                    
+                    # quantity
+                    quantity_temp = soup.select('div[class="servings-info info-block"]')
+                    
+                    if quantity_temp != []:
+                        quantity = int(quantity_temp[0].span.text)
 
                     if temp != recipe_name:
                         single_recipe_data = {}
@@ -79,7 +86,7 @@ def icook_ETL(web_url, categories_index, collection_name, mongo_id):
                         'recipe_url': recipe_url,
                         'recipe_img_url': recipe_img,
                         'post_time': post_time,
-                        'quantity': 1,
+                        'quantity': quantity,
                         'ingredients': [],
                         'cooking_steps': []
                     }
@@ -193,6 +200,12 @@ def main():
             9, web_url['icook'], recipes_categories['素食'], "vegetarian", 0))
         worker10 = threading.Thread(target=worker, args=(
             10, web_url['icook'], recipes_categories['台灣小吃'], "taiwan_snacks", 0))
+        
+        '''
+        Done
+        '米食', '麵食' ,'湯' ,'雞肉' ,'牛肉' ,'豬肉' ,'羊肉' ,'鴨肉' ,'素食' ,'海鮮'
+
+        '''
 
         # start threads
         worker1.start()
