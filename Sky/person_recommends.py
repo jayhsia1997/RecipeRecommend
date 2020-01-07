@@ -29,7 +29,7 @@ def plus(data_tag,n,m):
             data_tag[i + 1] = data_tag[i] + data_tag[i + 1]
             tmp = data_tag[i + 1]
         return tmp
-def point(data_tag):
+def tag_compute(data_tag):
     point_list=[1,4,7,9,10,12,14,18,19,20,23,24,25,27]
     list_text_cluster_score=[]
     list_nutrition_cluster_score=[]
@@ -50,7 +50,7 @@ def step_1(n):
     query_1="select * from users_tags where user={}".format(n)
     datarows=sql_query(query_1)
     data_tag=list(list(datarows)[0])
-    text_cluster,nutrition_cluster=point(data_tag)
+    text_cluster,nutrition_cluster=tag_compute(data_tag)
     query_2 = "select * from km_10_clusters where cluster={} and text_cluster={}".format(nutrition_cluster,text_cluster)
     cluster_intersection=sql_query(query_2)
     return cluster_intersection
