@@ -12,11 +12,11 @@ if os.path.exists(folder_path)  == False:
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://cook1cook.com/recipe/"
-recipe_num = 47881
+recipe_num = 30001
 ### start 1000
-### till 3000
+### till 47894
 
-for i in range(1):
+for i in range(17894):
 
     try:
         recipe_url = start_page + str(recipe_num)
@@ -31,7 +31,6 @@ for i in range(1):
         dish_name = recipe_searched_soup.select('h1[itemprop="name"]')[0].text.strip()
         dish_name = re.sub(r"\W.*\W", "", dish_name)
         dish_name = re.sub(r"\W", "", dish_name)
-
         print(dish_name)
 
 

@@ -12,11 +12,11 @@ if os.path.exists(folder_path)  == False:
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://www.fooding.com.tw/recipe-shares.php?cookid="
-recipe_num = 100127
+recipe_num = 111629
 ### start 1
-### till 116272
+### till 116290
 
-for i in range(1):
+for i in range(4662):
 
     try:
         recipe_url = start_page + str(recipe_num)
@@ -31,9 +31,9 @@ for i in range(1):
         ### 料理名
         dish_name = recipe_searched_soup.select('ol[class="breadcrumb"] li')[2].text.strip()
         # dish_name = recipe_searched_soup.select('form[class="form-horizontal"]')[0].h1.text
+        # dish_name = re.sub(r"\b\W\w*\W\b", "", dish_name)
         dish_name = re.sub(r"\W.*\W", "", dish_name)
         dish_name = re.sub(r"\W", "", dish_name)
-
         print(dish_name)
 
 
