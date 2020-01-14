@@ -14,9 +14,9 @@ my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebK
 start_page = "https://cook1cook.com/recipe/"
 recipe_num = 30001
 ### start 1000
-### till 30000
+### till 47894
 
-for i in range(1):
+for i in range(17894):
 
     try:
         recipe_url = start_page + str(recipe_num)

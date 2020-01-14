@@ -12,11 +12,11 @@ if os.path.exists(folder_path)  == False:
 my_headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"}
 
 start_page = "https://www.fooding.com.tw/recipe-shares.php?cookid="
-recipe_num = 100001
+recipe_num = 111629
 ### start 1
-### till 116278
+### till 116290
 
-for i in range(11628):
+for i in range(4662):
 
     try:
         recipe_url = start_page + str(recipe_num)
